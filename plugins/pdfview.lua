@@ -4,7 +4,9 @@ local config = require "core.config"
 local command = require "core.command"
 local keymap = require "core.keymap"
 
--- This plugin
+-- This plugin open the PDF file corresponding to the current tex file in a PDF viewer
+-- either specified in the lite-xl configuration or using the default PDF viewer of the
+-- current platform
 
 command.add("core.docview", {
   ["pdfview:show-preview"] = function()
