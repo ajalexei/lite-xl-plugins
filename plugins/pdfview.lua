@@ -1,43 +1,42 @@
 -- mod-version:2 -- lite-xl 2.0
 local core = require "core"
+local config = require "core.config"
 local command = require "core.command"
 local keymap = require "core.keymap"
 
+-- This plugin
+
 command.add("core.docview", {
   ["pdfview:show-preview"] = function()
-    local av = core.active_view
+    -- The current (La)TeX and PDF files, the PDF viewer command
+    local texfile = core.active_view:get_name()
+    local pdffile = core.active_view:get_filename()
+    local viewcmd = config.pdfview and config.pdfview.view_command
 
--- User's home directory
-    local homedir = ""
-
-    if PLATFORM == "Windows" then
-        homedir = os.getenv("USERPROFILE")
-    else
-        homedir = os.getenv("HOME")
-    end
-
--- The current (La)TeX file
-    local texfile = av:get_filename()
-    texfile = string.gsub(texfile, '~', homedir)
--- Construct the PDF file name out of the (La)Tex filename
-    local pdffile = "\"" .. string.gsub(texfile, ".tex", ".pdf") .. "\""
--- PDF viewer - is there any provided by the environment
-    local pdfcmd = os.getenv("LITE_PDF_VIEWER")
-
-    core.log("Opening pdf preview for \"%s\"", texfile)
-
-    if pdfcmd ~= nil then
-        system.exec(pdfcmd .. " " .. pdffile)
+    if viewcmd ~= nil then
+    -- Use default PDF viewer on Windows
     elseif PLATFORM == "Windows" then
-        system.exec("start " .. pdffile)
+      viewcmd = "start"
+    -- Use default PDF viewer on Macos
+    elseif PLATFORM == "" then
+      viewcmd = "open"
+    -- Use default PDF viewer on Linux
     else
-        system.exec(string.format("xdg-open %q", pdffile))
+      viewcmd = "xdg-open"
     end
 
---    core.add_thread(function()
---      coroutine.yield(5)
---      os.remove(htmlfile)
---    end)
+    -- Screen the full PDF filename in case there are spaces in the path
+    pdffile = "\"" .. pdffile:gsub("%.tex$", ".pdf") .. "\""
+
+    -- Windows does not understand/expand the ~ from the get_filename call
+    if PLATFORM == "Windows" then
+      pdffile = pdffile:gsub("~", os.getenv("USERPROFILE"))
+    end
+
+    -- Open PDF viewer
+    core.log("Opening PDF preview for %s", texfile)
+    system.exec(viewcmd .. " " .. pdffile)
+
   end
 })
 
