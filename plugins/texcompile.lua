@@ -44,7 +44,8 @@ command.add("core.docview", {
     -- LaTeX compiler as configured in config.texcompile
     local texcmd = config.texcompile and config.texcompile.latex_command
     local viewcmd = config.texcompile and config.texcompile.view_command
-    local runcmd = string.format("%s %s", texcmd, texname)
+    local runcmd = string.format("\"%s %s\"", texcmd, texname)
+    local quiet = config.texcompile and config.texcompile.quiet
 
 --    if viewcmd ~= nil
 --      runcmd = string.format("%s %s && %s %s", texcmd, texname, viewcmd, pdfname)
@@ -52,26 +53,30 @@ command.add("core.docview", {
     -- Windows does not understand/expand the ~ from the get_filename call
     if PLATFORM == "Windows" then
       texpath = texpath:gsub("~", os.getenv("USERPROFILE"))
---      texpath = texpath:gsub("\", "/")
+    else
+      texpath = texpath:gsub("~", os.getenv("HOME"))
     end
 
     -- Screen the TeX name in case it contain spaces
     texpath = "\"" .. texpath .. "\""
 
-    core.log("TeX name %s", texname)
+--    core.log("TeX name %s", texname)
 --    core.log("path is %s", texpath)
 
     -- Compile the TeX file into PDF
     if not texcmd then
       core.log("No LaTeX compiler provided in config.")
+    elseif quiet then
+      core.log("LaTeX compiler is %s, compiling %s", texcmd, texname)
+      system.exec("cd " .. texpath .. " && " .. texcmd .. " " .. texname)
     else
       core.log("LaTeX compiler is %s, compiling %s", texcmd, texname)
 
---      console.run {
---        command = runcmd,
---        cwd = texpath,
---        on_complete = function() core.log("Tex compiling command terminated.") end
---      }
+      console.run {
+        command = runcmd,
+        cwd = texpath,
+        on_complete = function() core.log("Tex compiling command terminated.") end
+      }
     end
   end,
 })
