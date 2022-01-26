@@ -20,7 +20,7 @@ command.add("core.docview", {
     elseif PLATFORM == "Windows" then
       viewcmd = "start"
     -- Use default PDF viewer on Macos
-    elseif PLATFORM == "" then
+    elseif PLATFORM == "Mac OS X" then
       viewcmd = "open"
     -- Use default PDF viewer on Linux
     else
@@ -33,6 +33,8 @@ command.add("core.docview", {
     -- Windows does not understand/expand the ~ from the get_filename call
     if PLATFORM == "Windows" then
       pdffile = pdffile:gsub("~", os.getenv("USERPROFILE"))
+    else
+      pdffile = pdffile:gsub("~", os.getenv("HOME"))
     end
 
     -- Open PDF viewer
